@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ note.title }}{% endblock %}
+{{ pagedown.include_pagedown() }}
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 800px;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ note.title }}</h1>
+            {% if note.user_id == current_user.id %}
+                <div class="btn-group">
+                    <a href="{{ url_for('notes.edit_note', id=note.id) }}" class="btn btn-sm btn-outline-secondary">
+                        Edit
+                    </a>
+                    <form method="POST"
+                      action="{{ url_for('notes.delete_note', id=note.id) }}">
+                    <input type="hidden" name="csrf_token"
+                           value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Delete this note permanently?')">
+                        Delete
+                    </button>
+                </form>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if note.encrypted %}
+            {% if note_content_html %}
+                <div class="note-content mb-4">
+                    {{ note_content_html|safe }}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    This note is encrypted. Please enter the password to view it.
+                </div>
+                <form method="POST">
+                    {{ password_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ password_form.password.label(class="form-label") }}
+                        {{ password_form.password(class="form-control" + (" is-invalid" if password_form.password.errors else "")) }}
+                        {% for error in password_form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Decrypt Note</button>
+                </form>
+            {% endif %}
+        {% else %}
+            <div class="note-content mb-4">
+                {{ note_content_html|safe }}
+            </div>
+        {% endif %}
+
+
+        <div class="text-muted small">
+            <div>Created: {{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            <div>Status: {% if note.public %}Public{% else %}Private{% endif %}</div>
+            {% if note.encrypted %}
+                <div>Encryption: Encrypted</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

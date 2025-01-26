@@ -1,0 +1,17 @@
+flask
+flask-sqlalchemy
+flask-limiter
+pyotp
+cryptography
+bleach
+qrcode
+Pillow
+markdown
+bleach
+gunicorn
+python-dotenv
+psycopg2-binary
+flask-login
+flask_wtf
+flask_argon2
+flask_pagedown

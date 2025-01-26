@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{{ pagedown.include_pagedown() }}
+{% block title %}{% if note %}Edit Note{% else %}New Note{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 800px;">
+    <div class="card-body">
+        <h2 class="card-title mb-4">{% if note %}Edit Note{% else %}Create New Note{% endif %}</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                {% for error in form.title.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.content.label(class="form-label") }}
+                {{ form.content(class="form-control", rows=10) }}
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.public(class="form-check-input") }}
+                {{ form.public.label(class="form-check-label") }}
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.encrypted(class="form-check-input", id="encrypt-checkbox") }}
+                {{ form.encrypted.label(class="form-check-label", for="encrypt-checkbox") }}
+            </div>
+
+            <div class="mb-3" id="password-field" style="display: none;">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                {% for error in form.password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+                <small class="form-text text-muted">Enter password to encrypt/decrypt this note. Keep it safe!</small>
+            </div>
+
+            <div class="mb-3">
+                {{ form.shared_with.label(class="form-label") }}
+                {{ form.shared_with(class="form-select", multiple=True) }}
+                {% for error in form.shared_with.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    {% if note %}Update{% else %}Create{% endif %}
+                </button>
+                <a href="{{ url_for('notes.list_notes') }}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const encryptCheckbox = document.getElementById('encrypt-checkbox');
+    const passwordField = document.getElementById('password-field');
+
+    function togglePasswordField() {
+        if (encryptCheckbox.checked) {
+            passwordField.style.display = 'block';
+        } else {
+            passwordField.style.display = 'none';
+        }
+    }
+
+    encryptCheckbox.addEventListener('change', togglePasswordField);
+
+    // Initial state on page load (for edit mode where encrypted might be pre-checked)
+    togglePasswordField();
+</script>
+{% endblock %}

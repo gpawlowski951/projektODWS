@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{{ pagedown.include_pagedown() }}
+{% block title %}My Notes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            My Notes
+            <small class="text-muted">({{ notes.total }} total)</small>
+        </h1>
+        <a href="{{ url_for('notes.new_note') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Note
+        </a>
+    </div>
+
+    <!-- Formularz wyszukiwania -->
+    <form method="GET" action="{{ url_for('notes.list_notes') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control"
+                   placeholder="Search notes..." value="{{ request.args.get('q', '') }}">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+
+    <!-- Lista notatek -->
+    {% if notes.items %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for note in notes.items %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    {{ note.created_at|datetimeformat }}
+                                </small>
+                                {% if note.encrypted %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-lock"></i> Encrypted
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ note.title|truncate(30) }}</h5>
+                            <div class="card-text">
+                                {% if note.encrypted %}
+                                    <span class="text-muted fst-italic">Note is encrypted</span>
+                                {% else %}
+                                    {{ note.content|striptags|truncate(100) }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{{ url_for('notes.view_note', id=note.id) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                <div class="btn-group">
+                                    {% if note.user_id == current_user.id %}
+                                        <a href="{{ url_for('notes.edit_note', id=note.id) }}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            Edit
+                                        </a>
+                                        <form method="POST"
+                                              action="{{ url_for('notes.delete_note', id=note.id) }}">
+                                            <input type="hidden" name="csrf_token"
+                                                   value="{{ csrf_token() }}">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Delete this note permanently?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginacja -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if notes.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('notes.list_notes', page=notes.prev_num, q=request.args.get('q')) }}">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in notes.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == notes.page %}active{% endif %}">
+                            <a class="page-link"
+                               href="{{ url_for('notes.list_notes', page=page_num, q=request.args.get('q')) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if notes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('notes.list_notes', page=notes.next_num, q=request.args.get('q')) }}">
+                            Next
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    {% else %}
+        <div class="text-center py-5">
+            <h4 class="text-muted mb-4">No notes found</h4>
+            <p>Start by creating your first note!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
